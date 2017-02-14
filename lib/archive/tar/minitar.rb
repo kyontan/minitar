@@ -177,7 +177,7 @@ module Archive::Tar::Minitar
         name = entry
       end
 
-      name = name.sub(%r{\./}, '')
+      name = name.sub(%r{^\./}, '')
       stat = File.stat(name)
       stats[:mode]   ||= stat.mode
       stats[:mtime]  ||= stat.mtime
