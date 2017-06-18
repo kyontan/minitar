@@ -192,9 +192,14 @@ module Archive::Tar::Minitar
       end
       
       stats = dest_stats unless dest_stats.nil?
+      if dest_stats.nil? || dest_stats[:name].nil?
+        dest_name = name
+      else
+        dest_name = dest_stats[:name]
+      end
 
       if File.file?(name)
-        outputter.add_file_simple(name, stats) do |os|
+        outputter.add_file_simple(dest_name, stats) do |os|
           stats[:current] = 0
           yield :file_start, name, stats if block_given?
           File.open(name, 'rb') do |ff|
@@ -208,7 +213,7 @@ module Archive::Tar::Minitar
         end
       elsif dir?(name)
         yield :dir, name, stats if block_given?
-        outputter.mkdir(name, stats)
+        outputter.mkdir(dest_name, stats)
       else
         raise %q(Don't yet know how to pack this type of file.)
       end
