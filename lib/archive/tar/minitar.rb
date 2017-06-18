@@ -163,7 +163,7 @@ module Archive::Tar::Minitar
     # <tt>:uid</tt>::     The user owner of the file. (+nil+ on Windows.)
     # <tt>:gid</tt>::     The group owner of the file. (+nil+ on Windows.)
     # <tt>:mtime</tt>::   The modification Time of the file.
-    def pack_file(entry, outputter) #:yields action, name, stats:
+    def pack_file(entry, outputter, dest_stats = nil) #:yields action, name, stats:
       if outputter.kind_of?(Archive::Tar::Minitar::Output)
         outputter = outputter.tar
       end
@@ -190,6 +190,8 @@ module Archive::Tar::Minitar
         stats[:uid]  ||= stat.uid
         stats[:gid]  ||= stat.gid
       end
+      
+      stats = dest_stats unless dest_stats.nil?
 
       if File.file?(name)
         outputter.add_file_simple(name, stats) do |os|
@@ -219,22 +221,22 @@ module Archive::Tar::Minitar
     #
     # If +src+ is an Array, it will be treated as the result of Find.find; all
     # files matching will be packed.
-    def pack(src, dest, recurse_dirs = true, &block)
+    def pack(src, dest, recurse_dirs: true, dest_stats: nil, &block)
       require 'find'
       Output.open(dest) do |outp|
         if src.kind_of?(Array)
           src.each do |entry|
             if dir?(entry) and recurse_dirs
               Find.find(entry) do |ee|
-                pack_file(ee, outp, &block)
+                pack_file(ee, outp, dest_stats, &block)
               end
             else
-              pack_file(entry, outp, &block)
+              pack_file(entry, outp, dest_stats, &block)
             end
           end
         else
           Find.find(src) do |entry|
-            pack_file(entry, outp, &block)
+            pack_file(entry, outp, dest_stats, &block)
           end
         end
       end
